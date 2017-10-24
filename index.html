@@ -1,8 +1,14 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <title>OSCQuery Remote example</title>
-  <p>This page controls the ossia-python_ws_html_example.py script.</p>
-  <p>Start the script before loading the page</p>
+  <title>Countdown control</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/slate.min.css">
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="node_modules/bootstrap-slider/dist/css/bootstrap-slider.css"></script>
+  <script src="node_modules/bootstrap-slider/dist/bootstrap-slider.js"></script>
 </head>
 <script>
     function init() {
@@ -145,14 +151,66 @@
 </script>
 
 <body onload="init()">
-<p>NOTE : the play checkbox have been reported to not work with Chrome 56.0.2924.87 (64-bit) on Ubuntu. It does with Firefox on the same computer.</p>
-<table>
- <tr><td>Play</td><td>  <input id="play"  type="checkbox" oninput="test()"/></td></tr>
- <tr><td>Color</td><td> <input id="color" type="color"></td></tr>
- <tr><td>Speed</td><td> <input id="speed" type="range" min="-200" max="200"></td><td><input id="speed_nbx" type="number" min="-2" max="2" step="0.01" size="5"></td></tr>
- <tr><td>Brightness</td><td> <input id="brightness" type="range" min="0" max="31"></td><td><input id="brightness_nbx" type="number" min="0" max="31" step="1" size="5"></td></tr>
- <tr><td>Text</td><td>  <input id="text"  type="text"/></td></tr>
-</table>
+<div class="container-fluid">
+  <h1>Countdown</h1>
+  <h2>Interactive LED countdown</h2>
+  <div class="row">
+    <div class="col-xs-6"><input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="20" data-slider-step="1" data-slider-value="14"/></div>
+    <div class="col-xs-6"><button type="button" class="btn">Basic</button></div>
+  </div>
+
+  <div class="row">
+   <div class="col-xs-4">
+     Play
+   </div>
+   <div class="col-xs-8">
+    <input id="play"  type="checkbox" oninput="test()"/>
+   </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-4">
+      Color
+    </div>
+    <div class="col-xs-8">
+      <input id="color" type="color">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-4">
+      Speed
+    </div>
+    <div class="col-xs-6">
+      <input id="speed" type="range" min="-200" max="200">
+    </div>
+    <div class="col-xs-2">
+      <input id="speed_nbx" type="number" min="-2" max="2" step="0.01">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-4">
+      Brightness
+    </div>
+    <div class="col-xs-6">
+      <input id="brightness" type="range" min="0" max="31">
+    </div>
+    <div class="col-xs-2">
+      <input id="brightness_nbx" type="number" min="0" max="31" step="1">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-4">
+      Text
+    </div>
+    <div class="col-xs-8">
+      <input id="text"  type="text"/>
+    </div>
+  </div>
+
+</div>
 </body>
 
 </html>

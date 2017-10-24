@@ -13,7 +13,8 @@ This script create an OSCQuery device that control an APA102 LED strip to make a
 
 # Configure logging to log to a file, making a new file at midnight and keeping the last 3 day's data
 LOG_LEVEL = logging.DEBUG
-LOG_FILENAME = os.path.dirname(os.path.realpath(__file__)) + "countdown.log"
+LOG_FILENAME = os.path.dirname(os.path.realpath(__file__)) + "/countdown.log"
+print("logfile: " + LOG_FILENAME)
 # Give the logger a unique name (good practice)
 logger = logging.getLogger(__name__)
 # Set the log level to LOG_LEVEL

@@ -11,8 +11,9 @@
   <script src="node_modules/bootstrap-slider/dist/bootstrap-slider.js"></script>
 </head>
 <script>
+    var ws = new WebSocket("ws://" + location.host + ":5678");
+
     function init() {
-      var ws = new WebSocket("ws://" + location.host + ":5678");
       ws.onopen = function(mess) {
           // This way the protocol will always try to send
           // data through websockets.
@@ -22,6 +23,7 @@
           ws.send("/brightness");
           ws.send("/text");
           ws.send("/play");
+          ws.send("blink");
       }
       var play = document.getElementById('play');
       var color = document.getElementById('color');
@@ -30,11 +32,12 @@
       var text = document.getElementById('text');
       var speed_nbx = document.getElementById('speed_nbx');
       var brighness_nbx = document.getElementById('brighness_nbx');
+      var time = document.getElementById('time');
 
       ws.onmessage = function(mess) {
           // An OSCQuery value json looks like
           // { "/the/addr" : 123 }
-          console.log(mess.data);
+          //console.log(mess.data);
           var json = JSON.parse(mess.data);
           var keys = Object.keys(json);
 
@@ -43,15 +46,20 @@
           var speed_k = keys.findIndex(function(val) { return val == "/speed"; });
           var brightness_k = keys.findIndex(function(val) { return val == "/brightness"; });
           var text_k = keys.findIndex(function(val) { return val == "/text"; });
+          var blink_k = keys.findIndex(function(val) { return val == "/blink"; });
+          var time_k = keys.findIndex(function(val) { return val == "/time"; });
+
           var full_path_k = keys.findIndex(function(val) { return val == "FULL_PATH"; });
+
           if(color_k != -1)
           {
               color.value = rgbToHex(json["/color"][0],json["/color"][1],json["/color"][2]);
+              time.style.color = color.value
           }
-          if(speed_k != -1)
-          {
-              speed.value = json["/speed"] * 100;
-          }
+          // if(speed_k != -1)
+          // {
+          //     speed.value = json["/speed"] * 100;
+          // }
           if(brightness_k != -1)
           {
               brightness.value = json["/brightness"];
@@ -64,12 +72,20 @@
           {
               text.checked = json["/text"];
           }
+          if(time_k != -1)
+          {
+              val = json["/time"];
+              minutes = parseInt(val / 60);
+              seconds = parseInt(val % 60);
+              time.innerText = ( "00" + minutes ).slice(-2) + ":" + ( "00" + seconds).slice(-2);
+          }
           if(full_path_k != -1)
           {
             path = json["FULL_PATH"];
             if (path == "/color")
             {
               color.value = rgbToHex(json["VALUE"][0],json["VALUE"][1],json["VALUE"][2]);
+              time.style.color = color.value
             }
             else if (path == "/speed")
             {
@@ -97,6 +113,8 @@
               var val = speed.value / 100.
               ws.send('{ "/speed": ' + val + '}');
               speed_nbx.value = val;
+              console.log("type of 'val': " + typeof val)
+
               console.log('{ "/speed": ' + val + '}');
       };
       brightness.oninput = function(ev) {
@@ -105,22 +123,16 @@
               brightness_nbx.value = val;
               console.log('{ "/brightness": ' + val + '}');
       };
-      play.oninput = function(ev) {
-              ws.send('{ "/play": ' + play.checked + '}');
-              console.log('{ "/play": ' + play.checked + '}');
-      };
-      text.oninput = function(ev) {
-              ws.send('{ "/text": "' + text.value + '" }');
-              console.log('{ "/text": ' + text.value + '}');
-      };
       color.oninput = function(ev) {
-              rgb = hexToRGB(color.value);
+              var rgb = hexToRGB(color.value);
               ws.send('{ "/color": [' + rgb + ']}');
+              time.style.color = color.value
               console.log('{ "/color": ' + rgb + '}');
       };
       speed_nbx.oninput = function(ev) {
               speed.value = speed_nbx.value * 100;
-              console.log('nbx oninput');
+              ws.send('{ "/speed": ' + speed_nbx.value + '}');
+              console.log('speed_nbx.oninput { "/speed": ' + speed_nbx.value + '}');
       }
       brightness_nbx.oninput = function(ev) {
               brightness.value = brightness_nbx.value;
@@ -142,16 +154,49 @@
        return "0123456789ABCDEF".charAt((n-n%16)/16)
             + "0123456789ABCDEF".charAt(n%16);
       }
-
-      function test()
-      {
-        console.log("this is a test");
-      }
     }
+    function play_oninput()
+    {
+      ws.send('{ "/play": ' + play.checked + '}');
+      console.log('{ "/play": ' + play.checked + '}');
+    }
+
+    function start() {
+      ws.send('{ "/play": ' + true + '}');
+            console.log('{ "/play": ' + true + '}');
+      // play.checked = true;
+    }
+
+    function stop() {
+      ws.send('{ "/play": ' + false + '}');
+            console.log('{ "/play": ' + false + '}');
+      // play.checked = false;
+    }
+
+    function text_validate() {
+      ws.send('{ "/text": "' + text.value + '" }');
+      console.log('{ "/text": ' + text.value + '}');
+    }
+
+    function start_time_validate() {
+      var st = start_time_min.value * 60 + start_time_sec.value;
+      time.value = st;
+      ws.send('{ "/text": "' + start_time_min.value + ':' + start_time_sec.value + '" }');
+      console.log('{ "/text": ' + start_time_min.value + ':' + start_time_sec.value + '}');
+    }
+
+    function duration_validate() {
+      var s = time.value / (duration_min.value*60 + duration_sec.value);
+      //ws.send('{ "/speed": "' + s + '" }');
+      console.log('{ "/speed": ' + s + '}');
+      speed_nbx.value = s;
+      speed.value = s * 100;
+    }
+
 </script>
 
 <body onload="init()">
-<div class="container-fluid">
+<div class="container">
   <h1>Countdown</h1>
   <h2>Interactive LED countdown</h2>
   <div class="row">
@@ -160,17 +205,23 @@
   </div>
 
   <div class="row">
-   <div class="col-xs-4">
-     Play
-   </div>
-   <div class="col-xs-8">
-    <input id="play"  type="checkbox" oninput="test()"/>
-   </div>
+    <div class="col-xs-4">
+      Play
+    </div>
+     <div class="col-xs-2">
+      <input id="play"  type="checkbox" onclick="play_oninput()"/>
+    </div>
+    <div class="col-xs-3">
+      <button onclick="start()">Start</button>
+    </div>
+    <div class="col-xs-3">
+      <button onclick="stop()">Stop</button>
+    </div>
   </div>
 
   <div class="row">
     <div class="col-xs-4">
-      Color
+      Couleur
     </div>
     <div class="col-xs-8">
       <input id="color" type="color">
@@ -179,19 +230,34 @@
 
   <div class="row">
     <div class="col-xs-4">
-      Speed
+      Clignotement
     </div>
-    <div class="col-xs-6">
-      <input id="speed" type="range" min="-200" max="200">
+    <div class="col-xs-1">
+      <input id="blink_on" type="checkbox">
     </div>
     <div class="col-xs-2">
-      <input id="speed_nbx" type="number" min="-2" max="2" step="0.01">
+      delay
+    </div>
+    <div class="col-xs-5">
+      <input id="blink_delay" type="number" min="10" max="10000">
     </div>
   </div>
 
   <div class="row">
     <div class="col-xs-4">
-      Brightness
+      Vitesse
+    </div>
+    <div class="col-xs-6">
+      <input id="speed" type="range" min="-1000" max="1000">
+    </div>
+    <div class="col-xs-2">
+      <input id="speed_nbx" type="number" min="-10" max="10" step="0.01">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-4">
+      Luminosité
     </div>
     <div class="col-xs-6">
       <input id="brightness" type="range" min="0" max="31">
@@ -201,13 +267,79 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-xs-4">
-      Text
+  <form>
+    <div class="row">
+      <div class="col-xs-4">
+        Texte
+      </div>
+      <div class="col-xs-4">
+        <div class="dropdown">
+          <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
+          <span class="caret"></span></button>
+          <ul class="dropdown-menu">
+            <li><a href="#">HTML</a></li>
+            <li><a href="#">CSS</a></li>
+            <li><a href="#">JavaScript</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-xs-2">
+        <input id="text"  type="text"/>
+      </div>
+      <div class="col-xs-2">
+        <button onclick="text_validate()">OK</button>
+      </div>
     </div>
-    <div class="col-xs-8">
-      <input id="text"  type="text"/>
+  </form>
+
+  <form>
+    <div class="row">
+      <div class="col-xs-4">
+        Temps de départ
+      </div>
+      <div class="col-xs-2">
+        <label for="start_time_min">
+          min
+          <input id="start_time_min" type="number" min="0" max="99">
+        </label>
+      </div>
+      <div class="col-xs-2">
+        <label for="start_time_sec">
+          sec
+          <input id="start_time_sec" type="number" min="0" max="59">
+        </label>
+      </div>
+      <div class="col-xs-2">
+        <button onclick="start_time_validate()">OK</button>
+      </div>
     </div>
+  </form>
+
+  <form>
+    <div class="row">
+      <div class="col-xs-4">
+        Durée prévue
+      </div>
+      <div class="col-xs-2">
+        <label for="duration_min">
+          min
+          <input id="duration_min" type="number" min="0" max="99">
+        </label>
+      </div>
+      <div class="col-xs-2">
+        <label for="duration_sec">
+          min
+          <input id="duration_sec" type="number" min="0" max="59">
+        </label>
+      </div>
+      <div class="col-xs-2">
+        <button onclick="duration_validate()">OK</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="h1">
+  <p id="time"></p>
   </div>
 
 </div>

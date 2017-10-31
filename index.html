@@ -23,7 +23,7 @@
           ws.send("/brightness");
           ws.send("/text");
           ws.send("/play");
-          ws.send("blink");
+          ws.send("/blink");
       }
       var play = document.getElementById('play');
       var color = document.getElementById('color');
@@ -181,8 +181,11 @@
     function start_time_validate() {
       var st = start_time_min.value * 60 + start_time_sec.value;
       time.value = st;
-      ws.send('{ "/text": "' + start_time_min.value + ':' + start_time_sec.value + '" }');
-      console.log('{ "/text": ' + start_time_min.value + ':' + start_time_sec.value + '}');
+      txt_minute = ( "00" + start_time_min.value ).slice(-2)
+      txt_second = ( "00" + start_time_sec.value ).slice(-2)
+
+      ws.send('{ "/text": "' + txt_minute + ':' + txt_second + '" }');
+      console.log('{ "/text": ' + txt_minute + ':' + txt_second + '}');
     }
 
     function duration_validate() {
@@ -199,10 +202,6 @@
 <div class="container">
   <h1>Countdown</h1>
   <h2>Interactive LED countdown</h2>
-  <div class="row">
-    <div class="col-xs-6"><input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="20" data-slider-step="1" data-slider-value="14"/></div>
-    <div class="col-xs-6"><button type="button" class="btn">Basic</button></div>
-  </div>
 
   <div class="row">
     <div class="col-xs-4">

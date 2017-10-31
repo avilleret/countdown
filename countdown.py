@@ -7,6 +7,7 @@ import apa102
 import logging.handlers
 import os
 import datetime
+from bitarray import bitarray
 
 """
 This script create an OSCQuery device that control an APA102 LED strip to make an interactive countdown.
@@ -42,12 +43,12 @@ local_device.create_oscquery_server(1234, 5678, False)
 
 # create a node, create a float parameter, set its properties and initialize it
 node = local_device.add_node("/color")
-parameter = node.create_parameter(ossia.ValueType.Vec3f)
-parameter.access_mode = ossia.AccessMode.Bi
-parameter.bounding_mode = ossia.BoundingMode.Clip
-parameter.make_domain(0,255)
-parameter.apply_domain()
-parameter.value = [255,0,0]
+parameter_color = node.create_parameter(ossia.ValueType.Vec3f)
+parameter_color.access_mode = ossia.AccessMode.Bi
+parameter_color.bounding_mode = ossia.BoundingMode.Clip
+parameter_color.make_domain(0,255)
+parameter_color.apply_domain()
+parameter_color.value = [255,0,0]
 
 node = local_device.add_node("/text")
 parameter_text = node.create_parameter(ossia.ValueType.String)
@@ -59,15 +60,15 @@ parameter_speed.access_mode = ossia.AccessMode.Bi
 parameter_speed.bounding_mode = ossia.BoundingMode.Clip
 parameter_speed.make_domain(-10,10)
 parameter_speed.apply_domain()
-parameter_speed.value = 1
+parameter_speed.value = -1
 
 node = local_device.add_node("/brightness")
-parameter = node.create_parameter(ossia.ValueType.Int)
-parameter.access_mode = ossia.AccessMode.Bi
-parameter.bounding_mode = ossia.BoundingMode.Clip
-parameter.make_domain(0,31)
-parameter.apply_domain()
-parameter.value = 1
+parameter_brightness = node.create_parameter(ossia.ValueType.Int)
+parameter_brightness.access_mode = ossia.AccessMode.Bi
+parameter_brightness.bounding_mode = ossia.BoundingMode.Clip
+parameter_brightness.make_domain(0,31)
+parameter_brightness.apply_domain()
+parameter_brightness.value = 1
 
 node = local_device.add_node("/play")
 parameter_play = node.create_parameter(ossia.ValueType.Bool)
@@ -80,6 +81,7 @@ parameter_time.access_mode = ossia.AccessMode.Get
 node.refresh_rate = 200
 parameter_time.value = 0
 
+# TODO : make blink work
 node = local_device.add_node("/blink/delay")
 parameter_blink_del = node.create_parameter(ossia.ValueType.Float)
 parameter_blink_del.access_mode = ossia.AccessMode.Bi
@@ -90,6 +92,12 @@ parameter_blink_del = node.create_parameter(ossia.ValueType.Bool)
 parameter_blink_del.access_mode = ossia.AccessMode.Bi
 parameter_blink_del.value = False
 
+node = local_device.add_node("/admin/update")
+parameter = node.create_parameter(ossia.ValueType.Impulse)
+
+node = local_device.add_node("/admin/reboot")
+parameter = node.create_parameter(ossia.ValueType.Impulse)
+
 globq = ossia.GlobalMessageQueue(local_device)
 
 # Setup LED
@@ -97,24 +105,104 @@ globq = ossia.GlobalMessageQueue(local_device)
 # 6 * 7 * 4 + 8 = 176 LEDS
 strip = apa102.APA102(176, 2)
 
-time_flag = True
+time_flag = False
 alast_time = datetime.datetime.now()
 print("started on " + str(alast_time) )
+
+dictionnary = { '0' : bitarray('1111110'),
+                '1' : bitarray('0011000'),
+                '2' : bitarray('0110111'),
+                '3' : bitarray('0111101'),
+                '4' : bitarray('1011001'),
+                '5' : bitarray('1101101'),
+                '6' : bitarray('1101111'),
+                '7' : bitarray('0111000'),
+                '8' : bitarray('1111111'),
+                '9' : bitarray('1111001'),
+                'A' : bitarray('1111011'),
+                'B' : bitarray('1001111'),
+                'C' : bitarray('1100110'),
+                'D' : bitarray('0011111'),
+                'E' : bitarray('1100111'),
+                'F' : bitarray('1100011'),
+                'H' : bitarray('1011011'),
+                'I' : bitarray('1000010'),
+                'J' : bitarray('0011100'),
+                'L' : bitarray('1000110'),
+                'N' : bitarray('0001011'),
+                'O' : bitarray('0001111'),
+                'P' : bitarray('1110011'),
+                'R' : bitarray('0000011'),
+                'S' : bitarray('1101101'),
+                'U' : bitarray('1011110'),
+                'Y' : bitarray('1011101'),
+                'Z' : bitarray('0110111') }
+
+def display_string( str ):
+  global_brighness = (parameter_brightness.value & 0b00011111) | 0b11100000
+  global_color = parameter_color.value
+  r = int(global_color[0])
+  g = int(global_color[1])
+  b = int(global_color[2])
+  for i in range(4):
+    arr = dictionnary[str.upper()[i]];
+    for seg in range(7): #loop over segments
+      on = arr[seg]
+      start = i*7+seg
+      offset = 0
+      if i > 1:
+        offset += 8 # jump over the 8 seperating LEDs
+      for y in range(6): #loop over LEDs in the segment
+        id = (start*6 + y + offset)*4
+        if on:
+          strip.leds[id] = global_brighness
+          strip.leds[id+1] = b
+          strip.leds[id+2] = g
+          strip.leds[id+3] = r
+        else:
+          strip.leds[id+1] = 0
+          strip.leds[id+2] = 0
+          strip.leds[id+3] = 0
+
 
 def update_led_display():
   if time_flag:
     minutes = int(parameter_time.value/60)
     seconds = int(parameter_time.value%60)
-    #print("time : " + str(minutes) + ":" + str(seconds))
+    time_string = '{0:02d}'.format(minutes) + '{0:02d}'.format(seconds)
+
+    display_string(time_string)
+
+    offset = 7*2*6
+    global_brighness = (parameter_brightness.value & 0b00011111) | 0b11100000
+    global_color = parameter_color.value
+    r = int(global_color[0])
+    g = int(global_color[1])
+    b = int(global_color[2])
+
+    for i in range(8):
+      id = (offset+i) * 4
+      if (int(parameter_time.value*2) % 2) == 1:
+        strip.leds[id] = global_brighness
+        strip.leds[id+1] = b
+        strip.leds[id+2] = g
+        strip.leds[id+3] = r
+      else:
+        strip.leds[id+1] = 0
+        strip.leds[id+2] = 0
+        strip.leds[id+3] = 0
+
+  else:
+    display_string(parameter_text.value)
+
   strip.show()
 
 def update_time():
   if parameter_play.value:
-    if parameter_time.value > 0:
+    if (parameter_time.value > 0 and parameter_speed.value > 0) or parameter_speed.value < 0:
       now = datetime.datetime.now()
       delta = now - alast_time
       parameter_time.value -= delta.total_seconds() * parameter_speed.value
-      print(parameter_time.value)
 
 def set_time():
   s = parameter_text.value
@@ -135,6 +223,15 @@ while(True):
     parameter, value = res
     if str(parameter.node) == "/text":
       set_time()
+    elif str(parameter.node) == "/admin/update":
+      print("receive '/admin/update'")
+      os.system("cd " + os.path.dirname(os.path.realpath(__file__)) + "&& git pull")
+      # TODO send feedback to a WS logger
+      # TODO check for update before pull
+    elif str(parameter.node) == "/admin/reboot":
+      print("I'm going to reboot now !")
+      os.system("reboot")
+
     print("globq: Got " +  str(parameter.node) + " => " + str(value))
     res=globq.pop()
 

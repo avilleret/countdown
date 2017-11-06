@@ -23,7 +23,8 @@
           ws.send("/brightness");
           ws.send("/text");
           ws.send("/play");
-          ws.send("/blink");
+          ws.send("/blink/delay");
+          ws.send("/blink/on");
       }
       var play = document.getElementById('play');
       var color = document.getElementById('color');
@@ -33,6 +34,8 @@
       var speed_nbx = document.getElementById('speed_nbx');
       var brighness_nbx = document.getElementById('brighness_nbx');
       var time = document.getElementById('time');
+      var blink_delay = document.getElementById('blink_delay');
+      var blink_on = document.getElementById('blink_on');
 
       ws.onmessage = function(mess) {
           // An OSCQuery value json looks like
@@ -46,7 +49,8 @@
           var speed_k = keys.findIndex(function(val) { return val == "/speed"; });
           var brightness_k = keys.findIndex(function(val) { return val == "/brightness"; });
           var text_k = keys.findIndex(function(val) { return val == "/text"; });
-          var blink_k = keys.findIndex(function(val) { return val == "/blink"; });
+          var blink_delay_k = keys.findIndex(function(val) { return val == "/blink/delay"; });
+          var blink_on_k = keys.findIndex(function(val) { return val == "/blink/on"; });
           var time_k = keys.findIndex(function(val) { return val == "/time"; });
 
           var full_path_k = keys.findIndex(function(val) { return val == "FULL_PATH"; });
@@ -102,6 +106,14 @@
             else if (path == "/text")
             {
               text.value = json["VALUE"];
+            }
+            else if (path == "/blink/delay")
+            {
+              blink_delay.value = json["VALUE"];
+            }
+            else if (path == "/blink/on")
+            {
+              blink_on.value = json["VALUE"];
             }
             else
             {
@@ -161,6 +173,26 @@
       console.log('{ "/play": ' + play.checked + '}');
     }
 
+    function blink_on_oninput()
+    {
+      ws.send('{ "/blink/on": ' + blink_on.checked + '}');
+      console.log('{ "/blink/on": ' + blink_on.checked + '}');
+    }
+
+    function blink_delay_onkeypressed(e)
+    {
+      if(e.keyCode == 13) {
+        blink_delay_send();
+        return false;
+      }
+    }
+
+    function blink_delay_send()
+    {
+      ws.send('{ "/blink/delay": ' + blink_delay.value + '}');
+      console.log('{ "/blink/delay": ' + blink_delay.value + '}');
+    }
+
     function start() {
       ws.send('{ "/play": ' + true + '}');
             console.log('{ "/play": ' + true + '}');
@@ -171,6 +203,24 @@
       ws.send('{ "/play": ' + false + '}');
             console.log('{ "/play": ' + false + '}');
       // play.checked = false;
+    }
+
+    function text_onkeypressed(e)
+    {
+      if (e.keyCode == 13)
+      {
+        text_validate();
+        return false;
+      } else { 
+        var res = String.fromCharCode(e.keyCode);
+        var validString = "AbCdEFHIJLnoPrSUYZ 0123456789";
+        var id = validString.toLowerCase().indexOf(res.toLowerCase());
+        if (id > -1 && text.value.length < 4)
+        {
+          text.value += validString[id];
+        }
+      }
+      return false;
     }
 
     function text_validate() {
@@ -213,10 +263,10 @@
       <input id="play"  type="checkbox" onclick="play_oninput()"/>
     </div>
     <div class="col-xs-3">
-      <button onclick="start()">Start</button>
+      <button type="button" class="btn-default" onclick="start()">Start</button>
     </div>
     <div class="col-xs-3">
-      <button onclick="stop()">Stop</button>
+      <button type="button" class="btn-default" onclick="stop()">Stop</button>
     </div>
   </div>
 
@@ -234,14 +284,18 @@
       Clignotement
     </div>
     <div class="col-xs-1">
-      <input id="blink_on" type="checkbox">
+      <input id="blink_on" type="checkbox" onclick="blink_on_oninput()">
     </div>
     <div class="col-xs-2">
       delay
     </div>
-    <div class="col-xs-5">
-      <input id="blink_delay" type="number" min="10" max="10000">
+    <div class="col-xs-3">
+      <input id="blink_delay" type="number" onkeypress="return blink_delay_onkeypressed(event)" min="10" max="10000">
     </div>
+    <div class="col-xs-2">
+      <button id="blink_submit" type="button" class="btn-default" onclick="blink_delay_send()">
+    </div>
+
   </div>
 
   <div class="row">
@@ -274,10 +328,10 @@
         Texte
       </div>
       <div class="col-xs-6">
-        <input id="text"  type="text"/>
+        <input id="text"  type="text" maxlength="4" onkeypress="return text_onkeypressed(event)"/>
       </div>
       <div class="col-xs-2">
-        <button type="button" onclick="text_validate()">OK</button>
+        <button type="button" class="btn-default" onclick="text_validate()">OK</button>
       </div>
     </div>
   </form>
@@ -300,7 +354,7 @@
         </label>
       </div>
       <div class="col-xs-2">
-        <button type="button" onclick="start_time_validate()">OK</button>
+        <button type="button" class="btn-default" onclick="start_time_validate()">OK</button>
       </div>
     </div>
   </form>
@@ -323,7 +377,7 @@
         </label>
       </div>
       <div class="col-xs-2">
-        <button type="button" onclick="duration_validate()">OK</button>
+        <button type="button" class="btn-default" onclick="duration_validate()">OK</button>
       </div>
     </div>
   </form>

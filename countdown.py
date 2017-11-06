@@ -91,9 +91,9 @@ try:
   parameter_blink_del.value = 1000.
 
   node = local_device.add_node("/blink/on")
-  parameter_blink_del = node.create_parameter(ossia.ValueType.Bool)
-  parameter_blink_del.access_mode = ossia.AccessMode.Bi
-  parameter_blink_del.value = False
+  parameter_blink_on = node.create_parameter(ossia.ValueType.Bool)
+  parameter_blink_on.access_mode = ossia.AccessMode.Bi
+  parameter_blink_on.value = False
 
   node = local_device.add_node("/admin/update")
   parameter = node.create_parameter(ossia.ValueType.Impulse)
@@ -116,6 +116,8 @@ try:
 
   time_flag = False
   alast_time = datetime.datetime.now()
+  blink_last_time = datetime.datetime.now()
+  blink_status = True # Whether the LED are ON or OFF, default ON
   print("started on " + str(alast_time) )
 
   dictionnary = { '0' : bitarray('1111110'),
@@ -186,7 +188,11 @@ try:
       display_string(time_string)
 
       offset = 7*2*6
-      global_brighness = (parameter_brightness.value & 0b00011111) | 0b11100000
+      if blink_status:
+        global_brighness = (parameter_brightness.value & 0b00011111) | 0b11100000
+      else:
+        global_brighness = (0 & 0b00011111) | 0b11100000
+      
       global_color = parameter_color.value
       r = int(global_color[0])
       g = int(global_color[1])
@@ -210,6 +216,7 @@ try:
     strip.show()
 
   def update_time():
+    global alast_time
     if parameter_play.value:
       if (parameter_time.value > 0 and parameter_speed.value > 0) or parameter_speed.value < 0:
         now = datetime.datetime.now()
@@ -226,6 +233,20 @@ try:
     except:
       print("can't parse text to time")
       parameter_play.value = False
+
+  def blink():
+    global blink_last_time
+    global blink_status
+    if (parameter_blink_on.value):
+      now = datetime.datetime.now()
+      delta = now - blink_last_time
+      if (delta.total_seconds() * 1000) > parameter_blink_del.value:
+        blink_last_time = now
+        blink_status = not blink_status
+    else:
+      blink_status = True
+
+
 
   while(True):
 
@@ -248,11 +269,14 @@ try:
 
     update_time()
     alast_time = datetime.datetime.now()
+    blink()
     update_led_display()
     time.sleep(0.01)
 
 except:  # Abbruch...
   print("Unexpected error:", sys.exc_info()[0])
+  print("value: ", sys.exc_info()[1])
+  print(sys.exc_info()[2])
   print('Interrupted...')
   strip.clearStrip()
   print('Strip cleared')

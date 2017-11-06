@@ -179,21 +179,23 @@
     }
 
     function start_time_validate() {
-      var st = start_time_min.value * 60 + start_time_sec.value;
+      var st =parseInt(start_time_min.value) * 60 + parseInt(start_time_sec.value);
       time.value = st;
       txt_minute = ( "00" + start_time_min.value ).slice(-2)
       txt_second = ( "00" + start_time_sec.value ).slice(-2)
 
-      ws.send('{ "/text": "' + txt_minute + ':' + txt_second + '" }');
-      console.log('{ "/text": ' + txt_minute + ':' + txt_second + '}');
+      ws.send('{ "/time": ' + st + '}');
+      // ws.send('{ "/text": "' + txt_minute + ':' + txt_second + '" }');
+      // console.log('{ "/text": ' + txt_minute + ':' + txt_second + '}');
     }
 
     function duration_validate() {
-      var s = time.value / (duration_min.value*60 + duration_sec.value);
-      //ws.send('{ "/speed": "' + s + '" }');
+      var s = time.value / (parseInt(duration_min.value)*60 + parseInt(duration_sec.value));
+      console.log("type of s: " + typeof s);
       console.log('{ "/speed": ' + s + '}');
       speed_nbx.value = s;
       speed.value = s * 100;
+      ws.send('{ "/speed": ' + speed_nbx.value + '}');
     }
 
 </script>
@@ -271,22 +273,11 @@
       <div class="col-xs-4">
         Texte
       </div>
-      <div class="col-xs-4">
-        <div class="dropdown">
-          <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
-          <span class="caret"></span></button>
-          <ul class="dropdown-menu">
-            <li><a href="#">HTML</a></li>
-            <li><a href="#">CSS</a></li>
-            <li><a href="#">JavaScript</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-xs-2">
+      <div class="col-xs-6">
         <input id="text"  type="text"/>
       </div>
       <div class="col-xs-2">
-        <button onclick="text_validate()">OK</button>
+        <button type="button" onclick="text_validate()">OK</button>
       </div>
     </div>
   </form>
@@ -309,7 +300,7 @@
         </label>
       </div>
       <div class="col-xs-2">
-        <button onclick="start_time_validate()">OK</button>
+        <button type="button" onclick="start_time_validate()">OK</button>
       </div>
     </div>
   </form>
@@ -332,7 +323,7 @@
         </label>
       </div>
       <div class="col-xs-2">
-        <button onclick="duration_validate()">OK</button>
+        <button type="button" onclick="duration_validate()">OK</button>
       </div>
     </div>
   </form>

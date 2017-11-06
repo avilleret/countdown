@@ -150,7 +150,14 @@ try:
                   'Z' : bitarray('0110111') }
 
   def display_string( str ):
-    global_brighness = (parameter_brightness.value & 0b00011111) | 0b11100000
+    global_brightness = (parameter_brightness.value & 0b00011111) | 0b11100000
+    
+    global blink_status
+    #print("blink_status: " + str(blink_status))
+
+    if not blink_status:
+      global_brightness = 0b11100000
+
     global_color = parameter_color.value
     r = int(global_color[0])
     g = int(global_color[1])
@@ -167,7 +174,7 @@ try:
           for y in range(6): #loop over LEDs in the segment
             id = (start*6 + y + offset)*4
             if on:
-              strip.leds[id] = global_brighness
+              strip.leds[id] = global_brightness
               strip.leds[id+1] = b
               strip.leds[id+2] = g
               strip.leds[id+3] = r
@@ -180,6 +187,7 @@ try:
 
 
   def update_led_display():
+    global blink_status
     if time_flag:
       minutes = int(parameter_time.value/60)
       seconds = int(parameter_time.value%60)
@@ -188,10 +196,10 @@ try:
       display_string(time_string)
 
       offset = 7*2*6
-      if blink_status:
-        global_brighness = (parameter_brightness.value & 0b00011111) | 0b11100000
-      else:
-        global_brighness = (0 & 0b00011111) | 0b11100000
+
+      global_brightness = (parameter_brightness.value & 0b00011111) | 0b11100000
+      if not blink_status:
+        global_brightness = (0 & 0b00011111) | 0b11100000
       
       global_color = parameter_color.value
       r = int(global_color[0])
@@ -201,7 +209,7 @@ try:
       for i in range(8):
         id = (offset+i) * 4
         if (int(parameter_time.value*2) % 2) == 1:
-          strip.leds[id] = global_brighness
+          strip.leds[id] = global_brightness
           strip.leds[id+1] = b
           strip.leds[id+2] = g
           strip.leds[id+3] = r
@@ -224,15 +232,18 @@ try:
         parameter_time.value -= delta.total_seconds() * parameter_speed.value
 
   def set_time():
+    global time_flag
     s = parameter_text.value
     try:
       minutes = int(float(s[:2]))
       seconds = int(float(s[-2:]))
       parameter_time.value = minutes*60 + seconds
       print("set_time: " + str(minutes) + ":" + str(seconds))
+      time_flag = True
     except:
       print("can't parse text to time")
       parameter_play.value = False
+      time_flag = False
 
   def blink():
     global blink_last_time
@@ -249,7 +260,8 @@ try:
 
 
   while(True):
-
+    global time_flag 
+    global blink_status
     res = globq.pop()
     while res != None:
       parameter, value = res
@@ -263,6 +275,8 @@ try:
       elif str(parameter.node) == "/admin/reboot":
         print("I'm going to reboot now !")
         os.system("reboot")
+      if str(parameter.node) == "/time":
+        time_flag = True
 
       print("globq: Got " +  str(parameter.node) + " => " + str(value))
       res=globq.pop()

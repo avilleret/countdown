@@ -129,23 +129,14 @@
 
               console.log('{ "/speed": ' + val + '}');
       };
-      brightness.oninput = function(ev) {
-              var val = brightness.value
-              ws.send('{ "/brightness": ' + val + '}');
-              brightness_nbx.value = val;
-              console.log('{ "/brightness": ' + val + '}');
-      };
+      
       color.oninput = function(ev) {
               var rgb = hexToRGB(color.value);
               ws.send('{ "/color": [' + rgb + ']}');
               time.style.color = color.value
               console.log('{ "/color": ' + rgb + '}');
       };
-      speed_nbx.oninput = function(ev) {
-              speed.value = speed_nbx.value * 100;
-              ws.send('{ "/speed": ' + speed_nbx.value + '}');
-              console.log('speed_nbx.oninput { "/speed": ' + speed_nbx.value + '}');
-      }
+
       brightness_nbx.oninput = function(ev) {
               brightness.value = brightness_nbx.value;
       }
@@ -228,20 +219,101 @@
       console.log('{ "/text": ' + text.value + '}');
     }
 
-    function start_time_validate() {
-      var st =parseInt(start_time_min.value) * 60 + parseInt(start_time_sec.value);
-      time.value = st;
-      txt_minute = ( "00" + start_time_min.value ).slice(-2)
-      txt_second = ( "00" + start_time_sec.value ).slice(-2)
-
-      ws.send('{ "/time": ' + st + '}');
-      // ws.send('{ "/text": "' + txt_minute + ':' + txt_second + '" }');
-      // console.log('{ "/text": ' + txt_minute + ':' + txt_second + '}');
+    function speed_nbx_onkeypress(e)
+    {
+      console.log("speed_nbx_onkeypress, event.keyCode: " + e.keyCode);
+      if(e.keyCode == 13)
+      {
+        speed_nbx_submit();
+        return false;
+      }
     }
 
-    function duration_validate() {
+    function speed_nbx_submit()
+    {
+        var val = speed_nbx.value;
+        console.log("val: " + val + " type of val: " + typeof val);
+        if (val.charAt(val.length-1) == 46)
+        {
+          val += 0;
+          console.log("val ends with dot");
+        }
+        speed.value =  parseFloat(val) * 100;
+        ws.send('{ "/speed": ' + val + '}');
+        console.log('speed_nbx.oninput { "/speed": ' + val + '}');
+    }
+
+    function brightness_nbx_onkeypress(e)
+    {
+      if(e.keyCode == 13)
+      {
+        brightness_nbx_submit();
+        return false;
+      }
+    }
+
+    function brightness_nbx_submit()
+    {
+      var val = parseFloat(brightness.value)
+      ws.send('{ "/brightness": ' + val + '}');
+      brightness_nbx.value = val;
+      console.log('{ "/brightness": ' + val + '}');
+    }
+
+    function time_min_onkeypressed(e)
+    {
+      if(e.keyCode == 13)
+      {
+        time_sec.focus();
+        return false;
+      }
+
+    }
+
+    function time_sec_onkeypressed(e)
+    {
+      if(e.keyCode == 13)
+      {
+        time_submit();
+        return false;
+      }
+
+    }
+
+    function time_submit() {
+      console.log("youpi");
+
+      var st =parseInt(time_min.value) * 60 + parseInt(time_sec.value);
+      time.value = st;
+      txt_minute = ( "00" + time_min.value ).slice(-2)
+      txt_second = ( "00" + time_sec.value ).slice(-2)
+
+      ws.send('{ "/time": ' + st + '}');
+      console.log('{ "/time": ' + st + '}');
+    }
+
+    function duration_min_onkeypressed(e)
+    {
+      if(e.keyCode == 13)
+      {
+        duration_sec.focus();
+        return false;
+      }
+
+    }
+
+    function duration_sec_onkeypressed(e)
+    {
+      if(e.keyCode == 13)
+      {
+        duration_submit();
+        return false;
+      }
+
+    }
+
+    function duration_submit() {
       var s = time.value / (parseInt(duration_min.value)*60 + parseInt(duration_sec.value));
-      console.log("type of s: " + typeof s);
       console.log('{ "/speed": ' + s + '}');
       speed_nbx.value = s;
       speed.value = s * 100;
@@ -293,7 +365,7 @@
       <input id="blink_delay" type="number" onkeypress="return blink_delay_onkeypressed(event)" min="10" max="10000">
     </div>
     <div class="col-xs-2">
-      <button id="blink_submit" type="button" class="btn-default" onclick="blink_delay_send()">
+      <button type="button" class="btn-default" onclick="blink_delay_send()">
     </div>
 
   </div>
@@ -302,11 +374,14 @@
     <div class="col-xs-4">
       Vitesse
     </div>
-    <div class="col-xs-6">
-      <input id="speed" type="range" min="-1000" max="1000">
+    <div class="col-xs-4">
+      <input id="speed" type="range" min="-1000" max="1000" onclick="speed_nbx_submit()">
     </div>
     <div class="col-xs-2">
-      <input id="speed_nbx" type="number" min="-10" max="10" step="0.01">
+      <input id="speed_nbx" type="number" min="-10" max="10" step="0.01" pattern="[0-9]+([\.,]][0-9]+)?" onkeypress="return speed_nbx_onkeypress(event)">
+    </div>
+    <div class="col-xs-2">
+      <button type="button" class="btn-default" onclick="speed_nbx_submit()">
     </div>
   </div>
 
@@ -314,11 +389,14 @@
     <div class="col-xs-4">
       Luminosité
     </div>
-    <div class="col-xs-6">
-      <input id="brightness" type="range" min="0" max="31">
+    <div class="col-xs-4">
+      <input id="brightness" type="range" min="0" max="31" onclick="brightness_nbx_submit()">
     </div>
     <div class="col-xs-2">
-      <input id="brightness_nbx" type="number" min="0" max="31" step="1">
+      <input id="brightness_nbx" type="number" min="0" max="31" step="1" pattern="[0-9]+" onkeypress="return brightness_nbx_onkeypress(event)">
+    </div>
+    <div class="col-xs-2">
+      <button type="button" class="btn-default" onclick="brightness_nbx_submit()">
     </div>
   </div>
 
@@ -342,19 +420,19 @@
         Temps de départ
       </div>
       <div class="col-xs-2">
-        <label for="start_time_min">
+        <label for="time_min">
           min
-          <input id="start_time_min" type="number" min="0" max="99">
+          <input id="time_min" type="number" min="0" max="99" onkeypress="return time_min_onkeypressed(event)">
         </label>
       </div>
       <div class="col-xs-2">
-        <label for="start_time_sec">
+        <label for="time_sec">
           sec
-          <input id="start_time_sec" type="number" min="0" max="59">
+          <input id="time_sec" type="number" min="0" max="59" onkeypress="return time_sec_onkeypressed(event)">
         </label>
       </div>
       <div class="col-xs-2">
-        <button type="button" class="btn-default" onclick="start_time_validate()">OK</button>
+        <button type="button" class="btn-default" onclick="time_submit()">OK</button>
       </div>
     </div>
   </form>
@@ -367,17 +445,17 @@
       <div class="col-xs-2">
         <label for="duration_min">
           min
-          <input id="duration_min" type="number" min="0" max="99">
+          <input id="duration_min" type="number" min="0" max="99" onkeypress="return duration_min_onkeypressed(event)">
         </label>
       </div>
       <div class="col-xs-2">
         <label for="duration_sec">
           min
-          <input id="duration_sec" type="number" min="0" max="59">
+          <input id="duration_sec" type="number" min="0" max="59" onkeypress="return duration_sec_onkeypressed(event)">
         </label>
       </div>
       <div class="col-xs-2">
-        <button type="button" class="btn-default" onclick="duration_validate()">OK</button>
+        <button type="button" class="btn-default" onclick="duration_submit()">OK</button>
       </div>
     </div>
   </form>

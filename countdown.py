@@ -63,7 +63,7 @@ try:
   parameter_speed.bounding_mode = ossia.BoundingMode.Clip
   parameter_speed.make_domain(-10,10)
   parameter_speed.apply_domain()
-  parameter_speed.value = -1
+  parameter_speed.value = 1
 
   node = local_device.add_node("/brightness")
   parameter_brightness = node.create_parameter(ossia.ValueType.Int)

@@ -208,7 +208,7 @@
         return false;
       } else { 
         var res = String.fromCharCode(e.keyCode);
-        var validString = "AbCdEFHIJLnoPrSUYZ 0123456789";
+        var validString = "AbCdEFHIJLnoPrStUYZ 0123456789";
         var id = validString.toLowerCase().indexOf(res.toLowerCase());
         if (id > -1 && text.value.length < 4)
         {

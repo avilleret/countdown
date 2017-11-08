@@ -150,6 +150,7 @@ try:
                   'P' : bitarray('1110011'),
                   'R' : bitarray('0000011'),
                   'S' : bitarray('1101101'),
+                  'T' : bitarray('1000111'),
                   'U' : bitarray('1011110'),
                   'Y' : bitarray('1011101'),
                   'Z' : bitarray('0110111') }

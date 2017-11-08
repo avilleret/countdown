@@ -97,6 +97,9 @@ parameter_blink_on.value = False
 node = local_device.add_node("/admin/update")
 parameter = node.create_parameter(ossia.ValueType.Impulse)
 
+node = local_device.add_node("/admin/shutdown")
+parameter = node.create_parameter(ossia.ValueType.Impulse)
+
 node = local_device.add_node("/admin/reboot")
 parameter = node.create_parameter(ossia.ValueType.Impulse)
 
@@ -291,6 +294,9 @@ try:
       elif str(parameter.node) == "/admin/reboot":
         print("I'm going to reboot now !")
         os.system("reboot")
+      elif str(parameter.node) == "/admin/shutdown":
+        print("I'm going to shutdown now !")
+        os.system("shutdown -P now")
       elif str(parameter.node) == "/time":
         time_flag = True
 

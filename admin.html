@@ -43,6 +43,10 @@
       console.log('{ "/admin/reboot" }');
     }
 
+    function shutdown() {
+      ws.send('{ "/admin/shutdown" : ""}');4
+    }
+
     function test_oninput() {
       var test = document.getElementById('test_checkbox');
       console.log("test.checked: " + test.checked)
@@ -68,7 +72,14 @@
       <button type="button" class="btn-danger" onclick="reboot()">Reboot</button>
     </div>
   </div>
+  
+  <div class="row">
+    <div class="col-xs-12">
+      <button type="button" class="btn-danger" onclick="shutdown()">Shutdown</button>
+    </div>
+  </div>
 
+  <p></p><p></p>
   <div class="row">
     <div class="col-xs-12">
       <input id="test_checkbox" type="checkbox" onclick="test_oninput()">Test</input>

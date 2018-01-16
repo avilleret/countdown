@@ -156,7 +156,8 @@ try:
                   'T' : bitarray('1000111'),
                   'U' : bitarray('1011110'),
                   'Y' : bitarray('1011101'),
-                  'Z' : bitarray('0110111') }
+                  'Z' : bitarray('0110111'),
+                  ' ' : bitarray('0000000')}
 
   def display_string( str ):
     global_brightness = (parameter_brightness.value & 0b00011111) | 0b11100000

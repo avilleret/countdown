@@ -50,11 +50,11 @@ parameter_color.access_mode = ossia.AccessMode.Bi
 parameter_color.bounding_mode = ossia.BoundingMode.Clip
 parameter_color.make_domain(0,255)
 parameter_color.apply_domain()
-parameter_color.value = [255,0,0]
+parameter_color.value = [255,255,255]
 
 node = local_device.add_node("/text")
 parameter_text = node.create_parameter(ossia.ValueType.String)
-parameter_text.value = "HELP"
+parameter_text.value = ""
 
 node = local_device.add_node("/speed")
 parameter_speed = node.create_parameter(ossia.ValueType.Float)

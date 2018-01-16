@@ -195,6 +195,17 @@ try:
       except:
         pass
 
+  def show_dot_display():
+    global_brightness = (parameter_brightness.value & 0b00011111) | 0b11100000
+
+    offset = 7*2*6
+
+    for i in range(8):
+      id = (offset+i) * 4
+      strip.leds[id] = global_brightness
+      strip.leds[id+1] = b
+      strip.leds[id+2] = g
+      strip.leds[id+3] = r
 
   def update_led_display():
     global blink_status
@@ -277,7 +288,7 @@ try:
     else:
       blink_status = True
 
-
+  show_dot_display()
 
   while(True):
     global time_flag 
